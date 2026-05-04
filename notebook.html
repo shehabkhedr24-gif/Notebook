@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>كراستي</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fdf6e3;
+    --line: #c9d8e8;
+    --margin: #f2a7a7;
+    --ink: #1a1a2e;
+    --cover-bg: #2c3e6b;
+    --cover-accent: #c0392b;
+    --gold: #c9a84c;
+    --line-height: 36px;
+    --sidebar: 260px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: #1a1a2e;
+    height: 100dvh;
+    display: flex;
+    overflow: hidden;
+    color: var(--ink);
+  }
+
+  /* ===== SIDEBAR ===== */
+  #sidebar {
+    width: var(--sidebar);
+    background: linear-gradient(160deg, #2c3e6b 0%, #1a1a2e 100%);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border-left: 1px solid rgba(201,168,76,0.3);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    z-index: 100;
+  }
+
+  #sidebar-header {
+    background: var(--cover-accent);
+    padding: 20px 16px 14px;
+    border-bottom: 3px solid var(--gold);
+  }
+
+  #sidebar-header h1 {
+    font-family: 'Amiri', serif;
+    font-size: 22px;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+
+  #sidebar-header p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+  }
+
+  #new-notebook-btn {
+    margin: 14px 12px 8px;
+    background: var(--gold);
+    color: #1a1a2e;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    width: calc(100% - 24px);
+    transition: opacity 0.2s;
+  }
+  #new-notebook-btn:active { opacity: 0.8; }
+
+  #notebooks-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  .notebook-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.15s;
+    position: relative;
+  }
+  .notebook-item:hover { background: rgba(255,255,255,0.06); }
+  .notebook-item.active { background: rgba(201,168,76,0.15); border-right: 3px solid var(--gold); }
+
+  .notebook-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .notebook-meta { flex: 1; min-width: 0; }
+  .notebook-name {
+    font-size: 14px;
+    color: #eee;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .notebook-pages {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 1px;
+  }
+
+  .delete-notebook {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.2);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+  .delete-notebook:hover { color: #e74c3c; }
+
+  /* ===== MAIN AREA ===== */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  /* ===== TOP BAR ===== */
+  #topbar {
+    background: #fff;
+    border-bottom: 2px solid var(--line);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  #toggle-sidebar {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--cover-bg);
+    padding: 4px;
+    display: none;
+  }
+
+  #notebook-title-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: 'Amiri', serif;
+    font-size: 20px;
+    color: var(--ink);
+    background: transparent;
+    text-align: right;
+    min-width: 0;
+  }
+  #notebook-title-input::placeholder { color: #bbb; }
+
+  #topbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .action-btn {
+    background: var(--cover-bg);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .action-btn:hover { background: #1a1a2e; }
+  .action-btn.pdf-btn { background: var(--cover-accent); }
+  .action-btn.pdf-btn:hover { background: #a93226; }
+
+  /* pages nav */
+  #pages-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f5f0e8;
+    border-bottom: 1px solid #ddd;
+    padding: 6px 14px;
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+  #pages-nav::-webkit-scrollbar { height: 3px; }
+
+  .page-tab {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Tajawal', sans-serif;
+    color: #555;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .page-tab.active {
+    background: var(--cover-bg);
+    color: #fff;
+    border-color: var(--cover-bg);
+  }
+  .page-tab:hover:not(.active) { background: #eee; }
+
+  #add-page-btn {
+    background: none;
+    border: 1px dashed #bbb;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #999;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  #add-page-btn:hover { border-color: var(--cover-bg); color: var(--cover-bg); }
+
+  /* ===== PAPER ===== */
+  #paper-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    background: #e8e0d0;
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  #paper {
+    width: 100%;
+    max-width: 680px;
+    background: var(--paper);
+    min-height: calc(var(--line-height) * 25);
+    position: relative;
+    box-shadow: 2px 4px 20px rgba(0,0,0,0.25), -1px 0 0 #e0d5c0;
+    border-radius: 2px;
+  }
+
+  /* Margin line */
+  #paper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 52px;
+    bottom: 0;
+    width: 1.5px;
+    background: var(--margin);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Ruled lines via repeating gradient */
+  #paper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent calc(var(--line-height) - 1px),
+      var(--line) calc(var(--line-height) - 1px),
+      var(--line) var(--line-height)
+    );
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  #page-textarea {
+    width: 100%;
+    min-height: calc(var(--line-height) * 25);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 7px 16px 16px 60px;
+    font-family: 'Amiri', serif;
+    font-size: 19px;
+    line-height: var(--line-height);
+    color: var(--ink);
+    position: relative;
+    z-index: 2;
+    direction: rtl;
+    text-align: right;
+    overflow: hidden;
+    word-break: break-word;
+  }
+
+  /* ===== EMPTY STATE ===== */
+  #empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.5);
+    gap: 14px;
+    padding: 40px;
+    text-align: center;
+  }
+  #empty-state .big-icon { font-size: 64px; }
+  #empty-state h2 { font-size: 20px; color: rgba(255,255,255,0.7); }
+  #empty-state p { font-size: 14px; line-height: 1.6; }
+  #empty-state button {
+    margin-top: 10px;
+    background: var(--gold);
+    color: #1a1a2e;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ===== MODAL ===== */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #modal-overlay.show { display: flex; }
+
+  #modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 360px;
+    direction: rtl;
+  }
+  #modal h2 {
+    font-family: 'Amiri', serif;
+    font-size: 22px;
+    margin-bottom: 16px;
+    color: var(--cover-bg);
+  }
+  #modal input {
+    width: 100%;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 16px;
+    outline: none;
+    direction: rtl;
+    transition: border-color 0.2s;
+  }
+  #modal input:focus { border-color: var(--cover-bg); }
+
+  .color-picker-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .color-opt {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .color-opt:hover { transform: scale(1.15); }
+  .color-opt.selected { border-color: #333; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #modal-confirm { background: var(--cover-bg); color: #fff; }
+  #modal-cancel { background: #eee; color: #555; }
+
+  /* ===== RESPONSIVE MOBILE ===== */
+  @media (max-width: 600px) {
+    :root { --sidebar: 240px; }
+
+    #sidebar {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      transform: translateX(0);
+    }
+    #sidebar.hidden { transform: translateX(100%); }
+
+    #main { width: 100%; }
+    #toggle-sidebar { display: block; }
+
+    #topbar { padding: 8px 10px; gap: 6px; }
+    #notebook-title-input { font-size: 17px; }
+    .action-btn { padding: 7px 10px; font-size: 12px; }
+
+    #paper-wrapper { padding: 14px 8px; }
+    #page-textarea { font-size: 18px; padding: 7px 12px 16px 52px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>📚 كراستي</h1>
+    <p>دفاتر ملاحظاتك الرقمية</p>
+  </div>
+  <button id="new-notebook-btn">＋ كراسة جديدة</button>
+  <div id="notebooks-list"></div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <button id="toggle-sidebar">☰</button>
+    <input id="notebook-title-input" type="text" placeholder="اسم الكراسة..." readonly />
+    <div id="topbar-actions">
+      <button class="action-btn pdf-btn" id="export-pdf-btn">⬇ PDF</button>
+    </div>
+  </div>
+
+  <div id="pages-nav" style="display:none">
+    <button id="add-page-btn" title="صفحة جديدة">＋</button>
+  </div>
+
+  <div id="empty-state">
+    <div class="big-icon">📖</div>
+    <h2>ابدأ كراستك الأولى</h2>
+    <p>اضغط على "كراسة جديدة" من القائمة<br>واكتب على ورق مسطّر حقيقي</p>
+    <button onclick="openNewNotebookModal()">＋ كراسة جديدة</button>
+  </div>
+
+  <div id="paper-wrapper" style="display:none">
+    <div id="paper">
+      <textarea id="page-textarea" placeholder="ابدأ الكتابة هنا...&#10;كل سطر هيتمشي مع الخطوط تلقائياً ✍️"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <h2>كراسة جديدة</h2>
+    <input id="modal-name-input" type="text" placeholder="اسم الكراسة (مثلاً: ملاحظات)" maxlength="40" />
+    <p style="margin-top:14px;font-size:13px;color:#888">اختار لون الغلاف:</p>
+    <div class="color-picker-row" id="color-picker"></div>
+    <div class="modal-actions">
+      <button id="modal-confirm">إنشاء ✓</button>
+      <button id="modal-cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const COVER_COLORS = [
+  '#2c3e6b','#c0392b','#1a6b3a','#6b3a1a',
+  '#5b2d8e','#1a5f6b','#6b5b1a','#2d2d2d'
+];
+const COVER_ICONS = ['📘','📕','📗','📙','📓','📒','📔','📃'];
+
+let data = JSON.parse(localStorage.getItem('karasati_data') || '[]');
+let activeNotebook = null;
+let activePage = 0;
+let selectedColor = COVER_COLORS[0];
+
+// ===== INIT =====
+function save() {
+  localStorage.setItem('karasati_data', JSON.stringify(data));
+}
+
+function init() {
+  renderColorPicker();
+  renderSidebar();
+  if (data.length > 0) openNotebook(0);
+}
+
+// ===== COLOR PICKER =====
+function renderColorPicker() {
+  const cp = document.getElementById('color-picker');
+  cp.innerHTML = '';
+  COVER_COLORS.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'color-opt' + (c === selectedColor ? ' selected' : '');
+    div.style.background = c;
+    div.onclick = () => {
+      selectedColor = c;
+      document.querySelectorAll('.color-opt').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+    };
+    cp.appendChild(div);
+  });
+}
+
+// ===== SIDEBAR =====
+function renderSidebar() {
+  const list = document.getElementById('notebooks-list');
+  list.innerHTML = '';
+  if (data.length === 0) {
+    list.innerHTML = '<p style="color:rgba(255,255,255,0.3);font-size:12px;text-align:center;padding:20px">لا توجد كراسات بعد</p>';
+    return;
+  }
+  data.forEach((nb, i) => {
+    const div = document.createElement('div');
+    div.className = 'notebook-item' + (activeNotebook === i ? ' active' : '');
+    div.innerHTML = `
+      <span class="notebook-icon">${nb.icon}</span>
+      <div class="notebook-meta">
+        <div class="notebook-name">${nb.name}</div>
+        <div class="notebook-pages">${nb.pages.length} صفحة</div>
+      </div>
+      <button class="delete-notebook" onclick="deleteNotebook(event,${i})">🗑</button>
+    `;
+    div.onclick = (e) => { if (!e.target.classList.contains('delete-notebook')) openNotebook(i); };
+    list.appendChild(div);
+  });
+}
+
+// ===== OPEN NOTEBOOK =====
+function openNotebook(index) {
+  activeNotebook = index;
+  activePage = 0;
+  const nb = data[index];
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('paper-wrapper').style.display = 'flex';
+  document.getElementById('pages-nav').style.display = 'flex';
+  document.getElementById('notebook-title-input').value = nb.name;
+  document.getElementById('paper').style.borderTop = `6px solid ${nb.color}`;
+
+  renderPages();
+  renderSidebar();
+  hideSidebar();
+}
+
+// ===== PAGES =====
+function renderPages() {
+  const nb = data[activeNotebook];
+  const nav = document.getElementById('pages-nav');
+  // clear except add button
+  Array.from(nav.children).forEach(c => { if (c.id !== 'add-page-btn') c.remove(); });
+
+  nb.pages.forEach((p, i) => {
+    const tab = document.createElement('button');
+    tab.className = 'page-tab' + (i === activePage ? ' active' : '');
+    tab.textContent = `صفحة ${i + 1}`;
+    tab.onclick = () => switchPage(i);
+    nav.appendChild(tab);
+  });
+
+  loadPage();
+}
+
+function switchPage(i) {
+  savePage();
+  activePage = i;
+  renderPages();
+}
+
+function loadPage() {
+  const nb = data[activeNotebook];
+  const ta = document.getElementById('page-textarea');
+  ta.value = nb.pages[activePage] || '';
+  autoResize(ta);
+}
+
+function savePage() {
+  if (activeNotebook === null) return;
+  const nb = data[activeNotebook];
+  nb.pages[activePage] = document.getElementById('page-textarea').value;
+  save();
+}
+
+// ===== AUTO RESIZE =====
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  const lh = parseInt(getComputedStyle(ta).lineHeight);
+  const lines = Math.max(25, Math.ceil(ta.scrollHeight / lh));
+  ta.style.height = (lines * lh) + 'px';
+  document.getElementById('paper').style.minHeight = (lines * lh + 16) + 'px';
+}
+
+document.getElementById('page-textarea').addEventListener('input', function() {
+  autoResize(this);
+  savePage();
+});
+
+// ===== ADD PAGE =====
+document.getElementById('add-page-btn').addEventListener('click', () => {
+  if (activeNotebook === null) return;
+  savePage();
+  data[activeNotebook].pages.push('');
+  activePage = data[activeNotebook].pages.length - 1;
+  save();
+  renderSidebar();
+  renderPages();
+});
+
+// ===== DELETE NOTEBOOK =====
+function deleteNotebook(e, i) {
+  e.stopPropagation();
+  if (!confirm('تأكيد حذف الكراسة؟')) return;
+  data.splice(i, 1);
+  save();
+  if (activeNotebook === i) {
+    activeNotebook = null;
+    activePage = 0;
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('paper-wrapper').style.display = 'none';
+    document.getElementById('pages-nav').style.display = 'none';
+    document.getElementById('notebook-title-input').value = '';
+  } else if (activeNotebook > i) {
+    activeNotebook--;
+  }
+  renderSidebar();
+}
+
+// ===== NEW NOTEBOOK MODAL =====
+function openNewNotebookModal() {
+  selectedColor = COVER_COLORS[0];
+  renderColorPicker();
+  document.getElementById('modal-name-input').value = '';
+  document.getElementById('modal-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('modal-name-input').focus(), 100);
+}
+
+document.getElementById('new-notebook-btn').addEventListener('click', openNewNotebookModal);
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  document.getElementById('modal-overlay').classList.remove('show');
+});
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('show');
+});
+
+document.getElementById('modal-confirm').addEventListener('click', () => {
+  const name = document.getElementById('modal-name-input').value.trim() || 'كراسة جديدة';
+  const colorIndex = COVER_COLORS.indexOf(selectedColor);
+  const nb = {
+    name,
+    color: selectedColor,
+    icon: COVER_ICONS[colorIndex] || '📓',
+    pages: ['']
+  };
+  data.push(nb);
+  save();
+  document.getElementById('modal-overlay').classList.remove('show');
+  renderSidebar();
+  openNotebook(data.length - 1);
+});
+
+document.getElementById('modal-name-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('modal-confirm').click();
+});
+
+// ===== SIDEBAR TOGGLE (mobile) =====
+document.getElementById('toggle-sidebar').addEventListener('click', () => {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('hidden');
+});
+
+function hideSidebar() {
+  if (window.innerWidth <= 600)
+    document.getElementById('sidebar').classList.add('hidden');
+}
+
+// ===== EXPORT PDF =====
+document.getElementById('export-pdf-btn').addEventListener('click', exportPDF);
+
+function exportPDF() {
+  if (activeNotebook === null) return alert('افتح كراسة أولاً');
+  savePage();
+  const nb = data[activeNotebook];
+
+  const win = window.open('', '_blank');
+  const lh = 36;
+
+  let pagesHTML = nb.pages.map((text, i) => {
+    const lines = text.split('\n');
+    const lineCount = Math.max(30, lines.length + 5);
+    const linesHTML = lines.map(l =>
+      `<div class="line">${l || '&nbsp;'}</div>`
+    ).join('');
+    return `
+      <div class="page">
+        <div class="page-header">
+          <span>${nb.name}</span>
+          <span>صفحة ${i + 1} من ${nb.pages.length}</span>
+        </div>
+        <div class="ruled-area">
+          ${linesHTML}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  win.document.write(`<!DOCTYPE html><html dir="rtl"><head>
+    <meta charset="UTF-8">
+    <title>${nb.name}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: #ccc; font-family: 'Amiri', serif; }
+      .page {
+        width: 210mm; min-height: 297mm;
+        background: #fdf6e3;
+        margin: 10mm auto;
+        padding: 15mm 15mm 15mm 20mm;
+        position: relative;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        page-break-after: always;
+      }
+      .page::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 20mm; bottom: 0;
+        width: 1.5px;
+        background: #f2a7a7;
+      }
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'Tajawal', sans-serif;
+        font-size: 11px;
+        color: #999;
+        padding-bottom: 6px;
+        border-bottom: 2px solid ${nb.color};
+        margin-bottom: 4px;
+      }
+      .ruled-area { }
+      .line {
+        height: ${lh}px;
+        line-height: ${lh}px;
+        border-bottom: 1px solid #c9d8e8;
+        font-size: 18px;
+        color: #1a1a2e;
+        padding: 0 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media print {
+        body { background: none; }
+        .page { margin: 0; box-shadow: none; page-break-after: always; }
+      }
+    </style>
+  </head><body>
+    ${pagesHTML}
+    <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
